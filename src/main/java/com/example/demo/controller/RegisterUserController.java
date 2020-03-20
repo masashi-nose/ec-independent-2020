@@ -3,15 +3,14 @@ package com.example.demo.controller;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import com.example.demo.RegisterUserService;
 import com.example.demo.domain.User;
 import com.example.demo.form.RegisterUserForm;
+import com.example.demo.service.RegisterUserService;
 
 /**
  * usersテーブルを操作するコントローラー.
@@ -20,7 +19,7 @@ import com.example.demo.form.RegisterUserForm;
  *
  */
 @Controller
-@RequestMapping("/")
+@RequestMapping("/register")
 public class RegisterUserController {
 
 	@Autowired
@@ -48,27 +47,29 @@ public class RegisterUserController {
 	 * @param user ユーザー情報の詰まったオブジェクト
 	 * @return （成功）ログイン画面/（失敗）登録画面
 	 */
-	@RequestMapping("/register")
-	public String register(@Validated RegisterUserForm form, BindingResult result, Model model) {
-		User user = registerUserService.findByEmail(form.getEmail());
+	@RequestMapping("/register-user")
+	public String register(@Validated RegisterUserForm form, BindingResult result) {
+		User existUser = registerUserService.findByEmail(form.getEmail());
 
-		if (user != null) {
-			result.rejectValue("null", "", "入力されたメールアドレスは既に登録されています。");
+		if (!(existUser == null)) {
+			result.rejectValue("email", "", "入力されたメールアドレスは既に登録されています。");
 		}
 
-		if (form.getPassword() != form.getConfirmPassword()) {
-			result.rejectValue("null", "", "パスワードが一致していません。");
+		if (!(form.getPassword().equals(form.getConfirmPassword()))) {
+			result.rejectValue("password", "", "パスワードが一致していません。");
 		}
 
 		if (result.hasErrors()) {
 			return toRegister();
 		}
 
+		User user = new User();
+		 
 		BeanUtils.copyProperties(form, user);
 
 		registerUserService.register(user);
 
-		return "redirect: /toLogin";
+		return "redirect:/login-user/toLogin";
 
 	}
 

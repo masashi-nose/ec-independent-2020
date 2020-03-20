@@ -1,4 +1,6 @@
-package com.example.demo.Repository;
+package com.example.demo.repository;
+
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.RowMapper;
@@ -46,9 +48,9 @@ public class UserRepository {
 	 * @param user ユーザー情報
 	 */
 	public void insert(User user) {
-		SqlParameterSource param = new BeanPropertySqlParameterSource(user);
 		String sql = "INSERT INTO " + TABLE_NAME
-				+ " (id, name, email, password, zipcode, address, telephone) values (id = :id, name = :name, email = :email, password = :password, zipcode = :zipcode, address = :address, telephone = :telephone)";
+				+ " (name, email, password, zipcode, address, telephone) values (:name, :email, :password, :zipcode, :address, :telephone)";
+		SqlParameterSource param = new BeanPropertySqlParameterSource(user);
 		template.update(sql, param);
 
 	}
@@ -60,11 +62,15 @@ public class UserRepository {
 	 * @return
 	 */
 	public User findByEmail(String email) {
-		String sql = "SELECT id, name, email, password, zipcode, address, telephone from " + TABLE_NAME
-				+ " WHERE email = :email";
+		String sql = "SELECT id, name, email, password, zipcode, address, telephone from " + TABLE_NAME + " WHERE email = :email";
 		SqlParameterSource param = new MapSqlParameterSource().addValue("email", email);
-		User user = template.queryForObject(sql, param, USER_ROW_MAPPER);
-		return user;
+		List<User> userList = template.query(sql, param, USER_ROW_MAPPER);
+
+		if (userList.size() == 0) {
+			return null;
+		}
+
+		return userList.get(0);
 	}
 
 }
